@@ -440,6 +440,7 @@ void LCD_ShowString(u16 x0, u16 y0, u8 *pcStr, u16 PenColor, u16 BackColor)
 	int temp = x0;
    while(*pcStr!='\0')
    {
+
       if(*pcStr>0x80)
       {
          LCD_ShowHzString(x0, y0, pcStr, PenColor, BackColor);
