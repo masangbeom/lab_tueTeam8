@@ -2,11 +2,11 @@
 #include "misc.h"
 #include "touch.h"
 
-void printOrderList(char * st, int * commandUI, uint16_t *pos_x, uint16_t *pos_y) {
+void printOrderList(char * tb_st,int printTableNUM, int * commandUI, uint16_t *pos_x, uint16_t *pos_y) {
 	uint16_t pix_x, pix_y;
 	LCD_Clear(WHITE);
 	while (*commandUI == 1) {
-		LCD_ShowString(10, 30, st, BLACK, WHITE);
+		LCD_ShowString(10, 30, tb_st, BLACK, WHITE);
 		LCD_DrawLine(0, 240, 240, 240);
 		Touch_GetXY(pos_x, pos_y, 1);
 		Convert_Pos(*pos_x, *pos_y, &pix_x, &pix_y);

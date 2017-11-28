@@ -11,14 +11,15 @@
 #define WAIT_ORDER 0
 #define NEW_ORDER 1
 
-
-char st[2048] = { '\0' };
+char tb_st[7][512] = { {'\0'},{'\0'},{'\0'},{'\0'},{'\0'},{'\0'},{'\0'} };
 
 char showString[2048] = { '\0' };
 
-int bufBLE, sizeBLE, tableNUM;
+int bufBLE, tableNUM;
+int sizeBLE[7];
 
 int commandUI = 0;
+int printTableNUM = 0;
 
 uint16_t pos_x, pos_y;
 
@@ -64,30 +65,67 @@ void UsartInit(void) {
 
 //Occured When detect Rx of USART2
 void USART2_IRQHandler(void) {
-	if ((USART2->SR & USART_FLAG_RXNE) != (u16) RESET) {
-		bufBLE = USART_ReceiveData(USART2);
-		if (sizeBLE == 512) {
-			st[sizeBLE] = bufBLE;
-			sizeBLE = 0;
-		} else {
-			st[sizeBLE++] = bufBLE;
-		}
-		st[sizeBLE] = '\0';
-	}
-	if (st[1] == 'B' && st[2] == 'T') {
-		st[0] = '\0';
-	} else if (st[1] == 'C' && st[2] == 'O') {
-		st[0] = '\0';
-	}
-}
+    if ((USART2 -> SR & USART_FLAG_RXNE) != (u16) RESET) {
+        bufBLE = USART_ReceiveData(USART2);
+        if (bufBLE == '@') {
+            tableNUM = 1;
+            tb_st[tableNUM][0] = '\0';
+        }
+        else if (bufBLE == '#') {
+            tableNUM = 2;
+            tb_st[tableNUM][0] = '\0';
+        }
+        else if (bufBLE == '$') {
+            tableNUM = 3;
+            tb_st[tableNUM][0] = '\0';
+        }
+        else if (bufBLE == '%') {
+            tableNUM = 4;
+            tb_st[tableNUM][0] = '\0';
+        }
+        else if (bufBLE == '^') {
+            tableNUM = 5;
+            tb_st[tableNUM][0] = '\0';
+        }
+        else if (bufBLE == '&') {
+            tableNUM = 6;
+            tb_st[tableNUM][0] = '\0';
+        }
 
+        if (sizeBLE[tableNUM] == 512) {
+            tb_st[tableNUM][sizeBLE[tableNUM]] = bufBLE;
+            sizeBLE[tableNUM] = 0;
+        } else {
+            tb_st[tableNUM][sizeBLE[tableNUM]++] = bufBLE;
+        }
+        tb_st[tableNUM][sizeBLE[tableNUM]] = '\0';
+    }
+
+    /*
+     if(bufBLE != '@'){
+        if (sizeBLE == 2048) {
+                 st[sizeBLE] = bufBLE;
+                 sizeBLE = 0;
+              } else {
+                 st[sizeBLE++] = bufBLE;
+              }
+              st[sizeBLE] = '\0';
+     }*/
+}
 int main() {
+	GPIO_InitTypeDef AAA;
 	SystemInit();
 	UsartInit();
 	LCD_Init();
 	Touch_Configuration();
 	Touch_Adjust();
 	LCD_Clear(WHITE);
+//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD,ENABLE);
+//
+//	AAA.GPIO_Pin = GPIO_Pin_2;
+//	AAA.GPIO_Speed = GPIO_Speed_10MHz;
+//	AAA.GPIO_Mode = GPIO_Mode_Out_PP;
+//	GPIO_Init(GPIOD,&AAA);
 
 	while (1) {
 		switch (commandUI) {
@@ -96,11 +134,10 @@ int main() {
 			break;
 		}
 		case NEW_ORDER: {
-			printOrderList(st, &tableNUM , &commandUI, &pos_x, &pos_y);
+			printOrderList(&tb_st[tableNUM], &printTableNUM , &commandUI, &pos_x, &pos_y);
 			break;
 		}
 
 		}
-
 	}
 }
