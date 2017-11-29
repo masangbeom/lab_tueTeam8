@@ -2,18 +2,18 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_usart.h"
+#include "stm32f10x_tim.h" // timer�� �����ϱ� ���� �Լ��� ������
 #include "lcd.h"
 #include "misc.h"
 #include "printFunc.h"
 #include "touch.h"
 #include "stdlib.h"
+#include "init.h"
 
 #define WAIT_ORDER 0
 #define NEW_ORDER 1
 
 char tb_st[7][512] = { {'\0'},{'\0'},{'\0'},{'\0'},{'\0'},{'\0'},{'\0'} };
-
-char showString[2048] = { '\0' };
 
 int new_flag[7];
 
@@ -25,36 +25,6 @@ int printTableNUM = 0;
 
 uint16_t pos_x, pos_y;
 
-//UsartInit
-void UsartInit(void) {
-	USART_InitTypeDef USART_InitStructure2;
-
-	NVIC_InitTypeDef NVIC_InitStruct_UART2;
-	// RCC Configuration
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-
-	/* UART2 Port Configuration */
-	USART_InitStructure2.USART_BaudRate = 9600;
-	USART_InitStructure2.USART_WordLength = USART_WordLength_8b;
-	USART_InitStructure2.USART_StopBits = USART_StopBits_1;
-	USART_InitStructure2.USART_Parity = USART_Parity_No;
-	USART_InitStructure2.USART_HardwareFlowControl =
-	USART_HardwareFlowControl_None;
-	USART_InitStructure2.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-
-	USART_Init(USART2, &USART_InitStructure2);
-
-	/* Enable NVIC for UART Interrupt */
-	NVIC_InitStruct_UART2.NVIC_IRQChannel = USART2_IRQn;
-	NVIC_InitStruct_UART2.NVIC_IRQChannelPreemptionPriority = 0x0;
-	NVIC_InitStruct_UART2.NVIC_IRQChannelSubPriority = 0x00;
-	NVIC_InitStruct_UART2.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStruct_UART2);
-
-	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
-
-	USART_Cmd(USART2, ENABLE);
-}
 
 //Occured When detect Rx of USART2
 void USART2_IRQHandler(void) {
@@ -64,31 +34,37 @@ void USART2_IRQHandler(void) {
             tableNUM = 1;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            bufBLE = ' ';
         }
         else if (bufBLE == '#') {
             tableNUM = 2;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            bufBLE = ' ';
         }
         else if (bufBLE == '$') {
             tableNUM = 3;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            bufBLE = ' ';
         }
         else if (bufBLE == '%') {
             tableNUM = 4;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            bufBLE = ' ';
         }
         else if (bufBLE == '^') {
             tableNUM = 5;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            bufBLE = ' ';
         }
         else if (bufBLE == '&') {
             tableNUM = 6;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            bufBLE = ' ';
         }
 
         if (sizeBLE[tableNUM] == 512) {
@@ -100,10 +76,27 @@ void USART2_IRQHandler(void) {
         tb_st[tableNUM][sizeBLE[tableNUM]] = '\0';
     }
 }
+
+
+
+//TIM2
+void TIM2_IRQHandler(void) {
+   if(new_flag[1]) LCD_ShowString(38, 53, "[NEW]" , GREEN, WHITE);
+   if(new_flag[2]) LCD_ShowString(158, 53, "[NEW]" , GREEN, WHITE);
+   if(new_flag[3]) LCD_ShowString(38, 153, "[NEW]" , GREEN, WHITE);
+   if(new_flag[4]) LCD_ShowString(158, 153, "[NEW]" , GREEN, WHITE);
+   if(new_flag[6]) LCD_ShowString(158, 253, "[NEW]" , GREEN, WHITE);
+   TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+   //Clears the TIMx's interrupt pending bits.
+}
+
+
+
 int main() {
 	GPIO_InitTypeDef AAA;
 	SystemInit();
 	UsartInit();
+    init_Timer();
 	LCD_Init();
 	Touch_Configuration();
 	Touch_Adjust();
@@ -115,7 +108,7 @@ int main() {
 			break;
 		}
 		case NEW_ORDER: {
-			printOrderList(&tb_st[printTableNUM], &commandUI, &pos_x, &pos_y);
+			printOrderList(tb_st[printTableNUM], &commandUI, &pos_x, &pos_y);
 			break;
 		}
 

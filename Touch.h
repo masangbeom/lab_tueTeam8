@@ -23,8 +23,6 @@ extern  short yoff;
 
 #define	T_INT		(1&((GPIOC->IDR)>>5))
 
-
-
 void ADS_Write_Byte(uint8_t num);	   
 uint16_t ADS_Read_AD(uint8_t CMD);
 void Touch_Configuration(void);

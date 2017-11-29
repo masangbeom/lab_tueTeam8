@@ -5,7 +5,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-
 /************************************
 ** ADS_Write_Byte :
 ** SPI Writing
@@ -203,6 +202,7 @@ void Touch_GetXY(uint16_t *x,uint16_t* y,uint8_t ext)
 		while(!(T_INT));
 	}	
 }
+
 
 
 /* Touch_Configuration */
