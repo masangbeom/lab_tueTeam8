@@ -317,10 +317,10 @@ void Touch_Adjust(void)
 			tem2*=tem2;
 			d2=sqrt(tem1+tem2);											
 			fac=(float)d1/d2;
-			if(fac<0.95||fac>1.05||d1==0||d2==0)						
-			{
-				continue;
-			}
+//			if(fac<0.95||fac>1.05||d1==0||d2==0)
+//			{
+//				continue;
+//			}
 			tem1=abs(pos_temp[0][0]-pos_temp[2][0]);					//x1-x3
 			tem2=abs(pos_temp[0][1]-pos_temp[2][1]);					//y1-y3
 			tem1*=tem1;
@@ -333,10 +333,10 @@ void Touch_Adjust(void)
 			tem2*=tem2;
 			d2=sqrt(tem1+tem2);											
 			fac=(float)d1/d2;
-			if(fac<0.95||fac>1.05)										
-			{
-				continue;
-			}
+//			if(fac<0.95||fac>1.05)
+//			{
+//				continue;
+//			}
 
 			tem1=abs(pos_temp[1][0]-pos_temp[2][0]);				//x1-x3
 			tem2=abs(pos_temp[1][1]-pos_temp[2][1]);				//y1-y3
@@ -350,10 +350,10 @@ void Touch_Adjust(void)
 			tem2*=tem2;
 			d2=sqrt(tem1+tem2);										
 			fac=(float)d1/d2;
-			if(fac<0.95||fac>1.05)
-			{
-				continue;
-			}
+//			if(fac<0.95||fac>1.05)
+//			{
+//				continue;
+//			}
 
 
 			xfac=(float)220/(pos_temp[1][0]-pos_temp[0][0]);					 

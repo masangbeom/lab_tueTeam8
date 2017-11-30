@@ -7,7 +7,7 @@
 #include "misc.h"
 #include "printFunc.h"
 #include "touch.h"
-#include "stdlib.h"
+#include <stdlib.h>
 #include "init.h"
 
 #define WAIT_ORDER 0
@@ -28,6 +28,12 @@ int countConfirm = 0;
 int printTableNUM = 0;
 
 uint16_t pos_x, pos_y;
+
+void SerialPutChar(uint8_t c) {
+	USART_SendData(USART2, c);
+	while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
+		;
+}
 
 //Occured When detect Rx of USART2
 void USART2_IRQHandler(void) {
@@ -85,19 +91,40 @@ void USART2_IRQHandler(void) {
 void TIM2_IRQHandler(void) {
 	if (commandUI == 0) {
 		if (new_flag[1])
-			LCD_ShowString(38, 69, "[NEW]", GREEN, WHITE);
+			LCD_ShowString(38, 75, "[NEW]", WHITE, GREEN);
 		if (new_flag[2])
-			LCD_ShowString(158, 69, "[NEW]", GREEN, WHITE);
+			LCD_ShowString(158, 75, "[NEW]", WHITE, GREEN);
 		if (new_flag[3])
-			LCD_ShowString(38, 169, "[NEW]", GREEN, WHITE);
+			LCD_ShowString(38, 175, "[NEW]", WHITE, GREEN);
 		if (new_flag[4])
-			LCD_ShowString(158, 169, "[NEW]", GREEN, WHITE);
+			LCD_ShowString(158, 175, "[NEW]", WHITE, GREEN);
+		if (new_flag[5])
+			LCD_ShowString(38, 290, "[NEW]", WHITE, GREEN);
 		if (new_flag[6])
-			LCD_ShowString(158, 269, "[NEW]", GREEN, WHITE);
+			LCD_ShowString(158, 290, "[NEW]", WHITE, GREEN);
 	}
 
-	if (commandUI == 3)
+	if (commandUI == 3) {
 		countConfirm++;
+		if (countConfirm == 4) {
+						int bufSendB;
+						if (printTableNUM == 1) {
+							bufSendB = '@';
+						} else if (printTableNUM == 2) {
+							bufSendB = '#';
+						} else if (printTableNUM == 3) {
+							bufSendB = '$';
+						} else if (printTableNUM == 4) {
+							bufSendB = '%';
+						} else if (printTableNUM == 5) {
+							bufSendB = '^';
+						} else if (printTableNUM == 6) {
+							bufSendB = '&';
+						}
+						USART_SendData(USART2, bufSendB);
+
+		}
+	}
 
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 	//Clears the TIMx's interrupt pending bits.
@@ -111,6 +138,8 @@ int main() {
 	Touch_Configuration();
 	Touch_Adjust();
 	LCD_Clear(WHITE);
+
+
 	while (1) {
 		switch (commandUI) {
 		case WAIT_ORDER: {
@@ -123,9 +152,12 @@ int main() {
 		}
 		case DELI_START: {
 			startDelivery(&commandUI, &pos_x, &pos_y);
+			break;
 		}
 		case CONFIRM: {
-			printConfirm(&commandUI, &countConfirm);
+			printConfirm(tb_st[printTableNUM], &sizeBLE[printTableNUM],
+					&commandUI, &countConfirm);
+			break;
 		}
 
 		}
