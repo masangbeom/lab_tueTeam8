@@ -4,7 +4,7 @@
 #include "stm32f10x_usart.h"
 #include "stm32f10x_tim.h"
 #include "stdlib.h"
-
+#include "misc.h"
 //UsartInit
 void UsartInit(void) {
 	USART_InitTypeDef USART_InitStructure2;
