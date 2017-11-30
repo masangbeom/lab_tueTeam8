@@ -1,17 +1,24 @@
 #include "lcd.h"
 #include "misc.h"
 #include "touch.h"
+#include "stm32f10x_tim.h"
 
 void printOrderList(char * tb_st, int * commandUI, uint16_t *pos_x, uint16_t *pos_y) {
 	uint16_t pix_x, pix_y;
+	TIM_ITConfig(TIM2, TIM_IT_Update, DISABLE); // interrupt enable
 	LCD_Clear(WHITE);
 	while (*commandUI == 1) {
 		LCD_ShowString(10, 30, tb_st, BLACK, WHITE);
+		LCD_DrawLine(100, 240, 100, 320);
+		LCD_ShowString(5, 275, "Back", BLACK, WHITE);
+		LCD_ShowString(120, 275, "Start Delivery", BLACK, WHITE);
 		LCD_DrawLine(0, 240, 240, 240);
 		Touch_GetXY(pos_x, pos_y, 1);
 		Convert_Pos(*pos_x, *pos_y, &pix_x, &pix_y);
-		if (pix_x >= 0 && pix_x <= 240 && pix_y >= 240 && pix_y <= 320) {
+		if (pix_x >= 0 && pix_x <= 100 && pix_y >= 240 && pix_y <= 320) {
 			*commandUI = 0;
+		}else if(pix_x > 100 && pix_x <= 240 && pix_y >= 240 && pix_y <= 320){
+			*commandUI = 0; // Start Delivery
 		}
 	}
 	LCD_Clear(WHITE);
@@ -20,6 +27,7 @@ void printOrderList(char * tb_st, int * commandUI, uint16_t *pos_x, uint16_t *po
 int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y, int * new_flag) {
 	uint16_t pix_x, pix_y;
 	int tableNumber = 0;
+	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
 	while (*commandUI == 0) {
 		LCD_DrawLine(0, 103, 240, 103);
 		LCD_DrawLine(0, 206, 240, 206);

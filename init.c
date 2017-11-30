@@ -2,11 +2,7 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_usart.h"
-#include "stm32f10x_tim.h" // timer�� �����ϱ� ���� �Լ��� ������
-#include "lcd.h"
-#include "misc.h"
-#include "printFunc.h"
-#include "touch.h"
+#include "stm32f10x_tim.h"
 #include "stdlib.h"
 
 //UsartInit
@@ -65,5 +61,5 @@ void init_Timer() {
    /* TIM2 Enale */
    TIM_ARRPreloadConfig(TIM2, ENABLE);
    TIM_Cmd(TIM2, ENABLE);
-   TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+
 }

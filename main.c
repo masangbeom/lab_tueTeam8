@@ -34,36 +34,42 @@ void USART2_IRQHandler(void) {
             tableNUM = 1;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            sizeBLE[tableNUM] = 0;
             bufBLE = ' ';
         }
         else if (bufBLE == '#') {
             tableNUM = 2;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            sizeBLE[tableNUM] = 0;
             bufBLE = ' ';
         }
         else if (bufBLE == '$') {
             tableNUM = 3;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            sizeBLE[tableNUM] = 0;
             bufBLE = ' ';
         }
         else if (bufBLE == '%') {
             tableNUM = 4;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            sizeBLE[tableNUM] = 0;
             bufBLE = ' ';
         }
         else if (bufBLE == '^') {
             tableNUM = 5;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            sizeBLE[tableNUM] = 0;
             bufBLE = ' ';
         }
         else if (bufBLE == '&') {
             tableNUM = 6;
             new_flag[tableNUM] = 1;
             tb_st[tableNUM][0] = '\0';
+            sizeBLE[tableNUM] = 0;
             bufBLE = ' ';
         }
 
@@ -81,11 +87,11 @@ void USART2_IRQHandler(void) {
 
 //TIM2
 void TIM2_IRQHandler(void) {
-   if(new_flag[1]) LCD_ShowString(38, 53, "[NEW]" , GREEN, WHITE);
-   if(new_flag[2]) LCD_ShowString(158, 53, "[NEW]" , GREEN, WHITE);
-   if(new_flag[3]) LCD_ShowString(38, 153, "[NEW]" , GREEN, WHITE);
-   if(new_flag[4]) LCD_ShowString(158, 153, "[NEW]" , GREEN, WHITE);
-   if(new_flag[6]) LCD_ShowString(158, 253, "[NEW]" , GREEN, WHITE);
+   if(new_flag[1]) LCD_ShowString(38, 69, "[NEW]" , GREEN, WHITE);
+   if(new_flag[2]) LCD_ShowString(158, 69, "[NEW]" , GREEN, WHITE);
+   if(new_flag[3]) LCD_ShowString(38, 169, "[NEW]" , GREEN, WHITE);
+   if(new_flag[4]) LCD_ShowString(158, 169, "[NEW]" , GREEN, WHITE);
+   if(new_flag[6]) LCD_ShowString(158, 269, "[NEW]" , GREEN, WHITE);
    TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
    //Clears the TIMx's interrupt pending bits.
 }
@@ -93,7 +99,6 @@ void TIM2_IRQHandler(void) {
 
 
 int main() {
-	GPIO_InitTypeDef AAA;
 	SystemInit();
 	UsartInit();
     init_Timer();
