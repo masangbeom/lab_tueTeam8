@@ -1,12 +1,24 @@
+/**
+  ******************************************************************************
+  * @author  	   Yuuki_Dach
+  * @version       V1.2.0
+  * @date          3-November-2016
+  * @description   Header file of movement.c 
+  ******************************************************************************
+  * @attention
+  *
+  * THERE ARE DEFINITIONS OF THE VALUES THAT THE MOVEMENT.C WILL NEED.
+  *
+  * <h2><center>&copy; COPYRIGHT 2016 Yuuki_Dach</center></h2>
+  ******************************************************************************
+  */
+	
 #ifndef __MOVEMENT_H
 #define __MOVEMENT_H
 
 #include "stm32f10x.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
-/*
 #include "delay.h"
-*/
+
 #define FORWARDS  0
 #define BACKWARDS 1
 #define TURNLEFT  2
@@ -49,4 +61,6 @@ void carGo(uint8_t direction);
 void carGoWithStick(uint8_t lx, uint8_t ly);
 
 #endif /* __MOVEMENT_H */
+
+/******************* (C) COPYRIGHT 2016 Yuuki_Dach *************END OF FILE****/
 

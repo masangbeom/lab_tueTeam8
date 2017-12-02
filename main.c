@@ -2,142 +2,168 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_usart.h"
+#include "stm32f10x_tim.h"
+#include "delay.h"
+#include "movement.h"
+#include "lcd.h"
 #include "misc.h"
-#include "Lb_Printf.h"
-#include "Lb_BT_Printf.h"
+#include "printFunc.h"
+#include "touch.h"
+#include "init.h"
 
-//Send Data Using TX of USART1
-void print_byte(unsigned short c) {
-   while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET)
-      ;
-   USART_SendData(USART1, c);
-}
+#define WAIT_ORDER 0
+#define NEW_ORDER 1
+#define DELI_START 2
+#define CONFIRM 3
 
-//Send Data Using TX of USART2
-void print_byte_to_Bluetooth(unsigned short c) {
-   while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
-      ;
-   USART_SendData(USART2, c);
-}
+char tb_st[7][512] = { { '\0' }, { '\0' }, { '\0' }, { '\0' }, { '\0' },
+		{ '\0' }, { '\0' } };
 
-//Detect RX Data of USART1 - PC
-int GetPCKey(char *pkey) {
-   int ret = 0;
+int new_flag[7];
 
-   if (USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == SET) {
-      *pkey = (u8) USART_ReceiveData(USART1);
-      ret = 1;
-   }
-   return ret;
-}
-//Detect RX Data of USART2 - Bluetooth
-int GetBluetoothKey(char *pkey) {
-   int ret = 0;
+int bufBLE, tableNUM;
+int sizeBLE[7];
 
-   if (USART_GetFlagStatus(USART2, USART_FLAG_RXNE) == SET) {
-      *pkey = (u8) USART_ReceiveData(USART2);
-      ret = 1;
-   }
-   return ret;
-}
-//UsartInit
-void UsartInit(void) {
-   GPIO_InitTypeDef GPIO_InitStructure;
-   USART_InitTypeDef USART_InitStructure1;
-
-   USART_InitTypeDef USART_InitStructure2;
-   NVIC_InitTypeDef NVIC_InitStruct_UART1;
-   NVIC_InitTypeDef NVIC_InitStruct_UART2;
-   // RCC Configuration
-   RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA,
-         ENABLE);
-   RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-
-   /* PA9 */
-   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-   GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-   /* PA10 */
-   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-   GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-   /* PA2 */
-   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-   GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-   /* PA3 */
-   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-   GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-   /* UART1 Port Configuration */
-   USART_InitStructure1.USART_BaudRate = 9600;
-   USART_InitStructure1.USART_WordLength = USART_WordLength_8b;
-   USART_InitStructure1.USART_StopBits = USART_StopBits_1;
-   USART_InitStructure1.USART_Parity = USART_Parity_No;
-   USART_InitStructure1.USART_HardwareFlowControl =
-         USART_HardwareFlowControl_None;
-   USART_InitStructure1.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-   USART_Init(USART1, &USART_InitStructure1);
-
-   /* UART2 Port Configuration */
-   USART_InitStructure2.USART_BaudRate = 9600;
-   USART_InitStructure2.USART_WordLength = USART_WordLength_8b;
-   USART_InitStructure2.USART_StopBits = USART_StopBits_1;
-   USART_InitStructure2.USART_Parity = USART_Parity_No;
-   USART_InitStructure2.USART_HardwareFlowControl =
-         USART_HardwareFlowControl_None;
-   USART_InitStructure2.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-
-   USART_Init(USART2, &USART_InitStructure2);
-
-   /* Enable NVIC for UART Interrupt */
-   NVIC_InitStruct_UART1.NVIC_IRQChannel = USART1_IRQn;
-   NVIC_InitStruct_UART1.NVIC_IRQChannelPreemptionPriority = 0x0;
-   NVIC_InitStruct_UART1.NVIC_IRQChannelSubPriority = 0x00;
-   NVIC_InitStruct_UART1.NVIC_IRQChannelCmd = ENABLE;
-   NVIC_Init(&NVIC_InitStruct_UART1);
-   /* Enable NVIC for UART Interrupt */
-   NVIC_InitStruct_UART2.NVIC_IRQChannel = USART2_IRQn;
-   NVIC_InitStruct_UART2.NVIC_IRQChannelPreemptionPriority = 0x0;
-   NVIC_InitStruct_UART2.NVIC_IRQChannelSubPriority = 0x00;
-   NVIC_InitStruct_UART2.NVIC_IRQChannelCmd = ENABLE;
-   NVIC_Init(&NVIC_InitStruct_UART2);
-
-   /* Enable Receive interrupts */
-   USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-   USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
-
-   USART_Cmd(USART1, ENABLE);
-   USART_Cmd(USART2, ENABLE);
-}
-
-//Occured When detect Rx of USART1
-void USART1_IRQHandler(void) {
-   char c;
-
-   if (GetPCKey(&c) == 1) { //Get Data Using RX's Signal of USART1
-      Lb_BT_printf("%c", c); //Send Data Using TX's Signal of USART2
-   }
-}
+int commandUI = 0;
+int countConfirm = 0;
+int printTableNUM = 0;
+const unsigned char welcome_str[] = " Welcome to Bluetooth!\r\n";
+uint16_t pos_x, pos_y;
 
 //Occured When detect Rx of USART2
 void USART2_IRQHandler(void) {
-   char c;
+	if ((USART2->SR & USART_FLAG_RXNE) != (u16) RESET) {
+		bufBLE = USART_ReceiveData(USART2);
+		if (bufBLE == '@') {
+			tableNUM = 1;
+			new_flag[tableNUM] = 1;
+			tb_st[tableNUM][0] = '\0';
+			sizeBLE[tableNUM] = 0;
+			bufBLE = ' ';
+		} else if (bufBLE == '#') {
+			tableNUM = 2;
+			new_flag[tableNUM] = 1;
+			tb_st[tableNUM][0] = '\0';
+			sizeBLE[tableNUM] = 0;
+			bufBLE = ' ';
+		} else if (bufBLE == '$') {
+			tableNUM = 3;
+			new_flag[tableNUM] = 1;
+			tb_st[tableNUM][0] = '\0';
+			sizeBLE[tableNUM] = 0;
+			bufBLE = ' ';
+		} else if (bufBLE == '%') {
+			tableNUM = 4;
+			new_flag[tableNUM] = 1;
+			tb_st[tableNUM][0] = '\0';
+			sizeBLE[tableNUM] = 0;
+			bufBLE = ' ';
+		} else if (bufBLE == '^') {
+			tableNUM = 5;
+			new_flag[tableNUM] = 1;
+			tb_st[tableNUM][0] = '\0';
+			sizeBLE[tableNUM] = 0;
+			bufBLE = ' ';
+		} else if (bufBLE == '&') {
+			tableNUM = 6;
+			new_flag[tableNUM] = 1;
+			tb_st[tableNUM][0] = '\0';
+			sizeBLE[tableNUM] = 0;
+			bufBLE = ' ';
+		}
 
-   if (GetBluetoothKey(&c) == 1) { //Get Data Using RX's Signal of USART2
-      Lb_printf("%c", c); //Send Data Using TX's Signal of USART1
+		if (sizeBLE[tableNUM] == 512) {
+			tb_st[tableNUM][sizeBLE[tableNUM]] = bufBLE;
+			sizeBLE[tableNUM] = 0;
+		} else {
+			tb_st[tableNUM][sizeBLE[tableNUM]++] = bufBLE;
+		}
+		tb_st[tableNUM][sizeBLE[tableNUM]] = '\0';
+	}
+
+}
+
+//TIM2
+void TIM2_IRQHandler(void) {
+
+	if (commandUI == 0) {
+		if (new_flag[1])
+			LCD_ShowString(38, 75, "[NEW]", WHITE, GREEN);
+		if (new_flag[2])
+			LCD_ShowString(158, 75, "[NEW]", WHITE, GREEN);
+		if (new_flag[3])
+			LCD_ShowString(38, 175, "[NEW]", WHITE, GREEN);
+		if (new_flag[4])
+			LCD_ShowString(158, 175, "[NEW]", WHITE, GREEN);
+		if (new_flag[5])
+			LCD_ShowString(38, 290, "[NEW]", WHITE, GREEN);
+		if (new_flag[6])
+			LCD_ShowString(158, 290, "[NEW]", WHITE, GREEN);
+	}
+
+	if (commandUI == 3) {
+		countConfirm++;
+		if (countConfirm == 4) {
+			commandUI = 0;
+		}
+	}
+
+	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+	//Clears the TIMx's interrupt pending bits.
+}
+
+void soundConfig(void) {
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD , ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+   if(GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11)) {
+      GPIO_SetBits(GPIOD, GPIO_Pin_2);
    }
 }
 
 int main() {
-   SystemInit();
-   UsartInit();
-   while (1) {
-   }
+	SystemInit();
+
+	delay_init(72);
+	Tire_Config();
+
+	UsartInit();
+	init_Timer();
+	LCD_Init();
+	Touch_Configuration();
+	Touch_Adjust();
+	LCD_Clear(WHITE);
+
+	while (1) {
+		switch (commandUI) {
+		case WAIT_ORDER: {
+			printTableNUM = printWaitUI(&commandUI, &pos_x, &pos_y, new_flag);
+			break;
+		}
+		case NEW_ORDER: {
+			printOrderList(tb_st[printTableNUM], &commandUI, &pos_x, &pos_y);
+			break;
+		}
+		case DELI_START: {
+			startDelivery(&commandUI, &pos_x, &pos_y);
+			break;
+		}
+		case CONFIRM: {
+			printConfirm(tb_st[printTableNUM], &sizeBLE[printTableNUM],
+					&commandUI, &countConfirm);
+			break;
+		}
+
+		}
+	}
 }

@@ -2,6 +2,8 @@
 #include "misc.h"
 #include "touch.h"
 #include "stm32f10x_tim.h"
+#include "delay.h"
+#include "movement.h"
 
 void printOrderList(char * tb_st, int * commandUI, uint16_t *pos_x,
 		uint16_t *pos_y) {
@@ -51,9 +53,10 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 		Touch_GetXY(pos_x, pos_y, 1);
 		Convert_Pos(*pos_x, *pos_y, &pix_x, &pix_y);
 		if (pix_x >= 0 && pix_x <= 120 && pix_y >= 0 && pix_y <= 103) {
-			*commandUI = 1;
-			tableNumber = 1;
-			new_flag[tableNumber] = 0;
+//			*commandUI = 1;
+//			tableNumber = 1;
+//			new_flag[tableNumber] = 0;
+			setSpeed(FORWARDS , 50, 50);
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 0 && pix_y <= 103) {
 			*commandUI = 1;
 			tableNumber = 2;
@@ -84,7 +87,6 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 
 void startDelivery(int * commandUI, uint16_t *pos_x, uint16_t *pos_y) {
 	uint16_t pix_x, pix_y;
-
 	while (*commandUI == 2) {
 		LCD_DrawLine(0, 240, 240, 240);
 		LCD_ShowString(30, 123, "FoodVery is delivering !", BLACK, WHITE);

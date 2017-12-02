@@ -1,0 +1,9 @@
+diff a/main.c b/main.c	(rejected hunks)
+@@ -8,7 +8,6 @@
+ #include "Lb_Printf.h"
+ #include "Lb_BT_Printf.h"
+ 
+-#define WAIT_ORDER 0
+ //Send Data Using TX of USART1
+ void print_byte(unsigned short c) {
+    while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET)
