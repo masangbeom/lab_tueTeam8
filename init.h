@@ -1,2 +1,2 @@
-void UsartInit(void);
-void init_Timer(void);
+//void UsartInit(void);
+//void init_Timer(void);
