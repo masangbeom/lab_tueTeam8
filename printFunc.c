@@ -84,6 +84,7 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 
 void startDelivery(int * commandUI, uint16_t *pos_x, uint16_t *pos_y) {
 	uint16_t pix_x, pix_y;
+
 	while (*commandUI == 2) {
 		LCD_DrawLine(0, 240, 240, 240);
 		LCD_ShowString(30, 123, "FoodVery is delivering !", BLACK, WHITE);

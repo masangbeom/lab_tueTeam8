@@ -29,11 +29,14 @@ int printTableNUM = 0;
 
 uint16_t pos_x, pos_y;
 
-void SerialPutChar(uint8_t c) {
-	USART_SendData(USART2, c);
-	while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
-		;
+const unsigned char welcome_str[] = " Welcome to Bluetooth!\r\n";
+
+void print_byte_to_Bluetooth(unsigned short c) {
+   while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
+      ;
+   USART_SendData(USART2, c);
 }
+
 
 //Occured When detect Rx of USART2
 void USART2_IRQHandler(void) {
@@ -89,6 +92,7 @@ void USART2_IRQHandler(void) {
 
 //TIM2
 void TIM2_IRQHandler(void) {
+
 	if (commandUI == 0) {
 		if (new_flag[1])
 			LCD_ShowString(38, 75, "[NEW]", WHITE, GREEN);
@@ -121,13 +125,31 @@ void TIM2_IRQHandler(void) {
 						} else if (printTableNUM == 6) {
 							bufSendB = '&';
 						}
-						USART_SendData(USART2, bufSendB);
-
+						print_byte_to_Bluetooth(bufSendB);
 		}
 	}
 
 	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 	//Clears the TIMx's interrupt pending bits.
+}
+
+void soundConfig(void) {
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD , ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+   if(GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11)) {
+      GPIO_SetBits(GPIOD, GPIO_Pin_2);
+   }
 }
 
 int main() {
@@ -138,7 +160,6 @@ int main() {
 	Touch_Configuration();
 	Touch_Adjust();
 	LCD_Clear(WHITE);
-
 
 	while (1) {
 		switch (commandUI) {
