@@ -26,23 +26,33 @@ void Tire_Config(void) {
 	stopTheCar();
 }
 
-void setSpeed(int towards) {
+void setTowardAndTime(int towards, int time) {
 	switch (towards) {
 	case FORWARDS:
 		setForwards();
+		delay_ms(time);
 		break;
 	case BACKWARDS:
 		setBackwards();
+		delay_ms(time);
 		break;
 	case TURNLEFT:
 		setTurnLeft();
+		delay_ms(time);
 		break;
 	case TURNRIGHT:
 		setTurnRight();
+		delay_ms(time);
 		break;
 	default: stopTheCar();
 	}
 }
+
+//void goToXY(int *valueXY){
+//	setTowardAndTime(0);
+//	setTowardAndTime();
+//	stopTheCar();
+//}
 
 void setForwards(void) {
 	GPIO_Write(GPIOD, GPIO_ReadOutputData(GPIOD) & 0xff55);
