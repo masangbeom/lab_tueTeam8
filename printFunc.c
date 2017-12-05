@@ -32,7 +32,7 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 		int * new_flag) {
 	uint16_t pix_x, pix_y;
 	int tableNumber = 0;
-	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+	//	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
 	while (*commandUI == 0) {
 		LCD_DrawLine(0, 103, 240, 103);
 		LCD_DrawLine(0, 220, 240, 220);
@@ -53,27 +53,58 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 		Touch_GetXY(pos_x, pos_y, 1);
 		Convert_Pos(*pos_x, *pos_y, &pix_x, &pix_y);
 		if (pix_x >= 0 && pix_x <= 120 && pix_y >= 0 && pix_y <= 103) {
-//			*commandUI = 1;
-//			tableNumber = 1;
-//			new_flag[tableNumber] = 0;
-			setSpeed(FORWARDS , 50, 50);
+			//			*commandUI = 1;
+			//			tableNumber = 1;
+			//			new_flag[tableNumber] = 0;
+			//			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+			//			*test_count = 5;
+			//			while (test_count != 0) {
+			setForwards();
+			delay_ms(1000);
+			stopTheCar();
+			//			}
+			//			*test_count = 0;
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 0 && pix_y <= 103) {
-			*commandUI = 1;
-			tableNumber = 2;
-			new_flag[tableNumber] = 0;
+			//			*commandUI = 1;
+			//			tableNumber = 2;
+			//			new_flag[tableNumber] = 0;
+			//			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+			//			*test_count = 5;
+			//			while (test_count != 0) {
+			setBackwards();
+			delay_ms(1000);
+			stopTheCar();
+			//			}
 		} else if (pix_x >= 0 && pix_x <= 120 && pix_y >= 103 && pix_y <= 206) {
-			*commandUI = 1;
-			tableNumber = 3;
-			new_flag[tableNumber] = 0;
+			//			*commandUI = 1;
+			//			tableNumber = 3;
+			//			new_flag[tableNumber] = 0;
+
+			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+			//			*test_count = 5;
+			//			while (test_count != 0) {
+			setTurnLeft();
+			delay_ms(1000);
+			stopTheCar();
+			//			}
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 103
 				&& pix_y <= 206) {
-			*commandUI = 1;
-			tableNumber = 4;
-			new_flag[tableNumber] = 0;
+			//			*commandUI = 1;
+			//			tableNumber = 4;
+			//			new_flag[tableNumber] = 0;
+			//			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+			//			*test_count = 5;
+			setTurnRight();
+			delay_ms(1000);
+			stopTheCar();
 		} else if (pix_x >= 0 && pix_x <= 120 && pix_y >= 206 && pix_y <= 320) {
-			*commandUI = 1;
-			tableNumber = 5;
-			new_flag[tableNumber] = 0;
+			//			*commandUI = 1;
+			//			tableNumber = 5;
+			//			new_flag[tableNumber] = 0;
+
+			//			while (test_count != 0) {
+			stopTheCar();
+			//						}
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 206
 				&& pix_y <= 320) {
 			*commandUI = 1;
@@ -100,9 +131,11 @@ void startDelivery(int * commandUI, uint16_t *pos_x, uint16_t *pos_y) {
 	LCD_Clear(WHITE);
 }
 
-void printConfirm(char * tb_st, int * tbSizeBLE, int *commandUI, int * countConfirm) {
+void printConfirm(char * tb_st, int * tbSizeBLE, int *commandUI,
+		int * countConfirm) {
 	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
-	LCD_ShowString(30, 153, "Have a nice meal.\n\nThank you for your order.", BLACK, WHITE);
+	LCD_ShowString(30, 153, "Have a nice meal.\n\nThank you for your order.",
+			BLACK, WHITE);
 	while (*commandUI == 3) {
 		if (*countConfirm == 4) {
 			*countConfirm = 0;

@@ -10,6 +10,7 @@
 #include "printFunc.h"
 #include "touch.h"
 #include "init.h"
+#include "pca9685.h"
 
 #define WAIT_ORDER 0
 #define NEW_ORDER 1
@@ -27,7 +28,7 @@ int sizeBLE[7];
 int commandUI = 0;
 int countConfirm = 0;
 int printTableNUM = 0;
-const unsigned char welcome_str[] = " Welcome to Bluetooth!\r\n";
+
 uint16_t pos_x, pos_y;
 
 //Occured When detect Rx of USART2
@@ -113,30 +114,29 @@ void TIM2_IRQHandler(void) {
 }
 
 void soundConfig(void) {
-    GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitTypeDef GPIO_InitStructure;
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD , ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD , ENABLE);
 
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_Init(GPIOD, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOD, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
 
-   if(GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11)) {
-      GPIO_SetBits(GPIOD, GPIO_Pin_2);
-   }
+	if(GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11)) {
+		GPIO_SetBits(GPIOD, GPIO_Pin_2);
+	}
 }
 
 int main() {
+	int i = 0 ;
 	SystemInit();
-
-	delay_init(72);
 	Tire_Config();
-
+	delay_init(72);
 	UsartInit();
 	init_Timer();
 	LCD_Init();
