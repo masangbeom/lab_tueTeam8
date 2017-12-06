@@ -7,6 +7,7 @@
 #include "stm32f10x_dma.h"
 #include "stdlib.h"
 #include "misc.h"
+#include "init.h"
 
 #define ADC1_DR_Address    ((u32)0x4001244C)
 
@@ -70,9 +71,9 @@ void init_Timer() {
 
 //ADC 설정 : 조도센서 값 출력 Channel 8번 사용.
 void ADC1_Configuration(void) {
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-
 	ADC_InitTypeDef ADC_InitStructure;
+
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 
 	/* ADC1 configuration ------------------------------------------------------*/
 	ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
@@ -121,7 +122,7 @@ void GPIO_Configuration(void) {
 
 }
 
-void DMA_Configuration() {
+void DMA_Configuration(vu16 * ADCConvertedValue) {
 	DMA_InitTypeDef DMA_InitStructure;
 	/* Enable DMA1 clock */
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
@@ -129,7 +130,7 @@ void DMA_Configuration() {
 	/* DMA1 channel1 configuration ----------------------------------------------*/
 	DMA_DeInit(DMA1_Channel1);
 	DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1_DR_Address;
-	DMA_InitStructure.DMA_MemoryBaseAddr = (u32) &ADCConvertedValue;
+	DMA_InitStructure.DMA_MemoryBaseAddr = (u32) ADCConvertedValue;
 	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
 	DMA_InitStructure.DMA_BufferSize = 1;
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;

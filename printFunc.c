@@ -35,8 +35,8 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 //			tableNumber = 1;
 //			new_flag[tableNumber] = 0;
 			setForwards();
-			delay_ms(1000);
-			stopTheCar();
+//			delay_ms(1000);
+//			stopTheCar();
 
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 0 && pix_y <= 103) {
 //			*commandUI = 1;
@@ -44,8 +44,8 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 //			new_flag[tableNumber] = 0;
 
 			setBackwards();
-			delay_ms(1000);
-			stopTheCar();
+//			delay_ms(1000);
+//			stopTheCar();
 //
 		} else if (pix_x >= 0 && pix_x <= 120 && pix_y >= 103 && pix_y <= 206) {
 //			*commandUI = 1;
@@ -53,8 +53,8 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 //			new_flag[tableNumber] = 0;
 
 			setTurnLeft();
-			delay_ms(1000);
-			stopTheCar();
+//			delay_ms(1000);
+//			stopTheCar();
 //
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 103
 				&& pix_y <= 206) {
@@ -62,8 +62,8 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 //			tableNumber = 4;
 //			new_flag[tableNumber] = 0;
 			setTurnRight();
-			delay_ms(1000);
-			stopTheCar();
+//			delay_ms(1000);
+//			stopTheCar();
 		} else if (pix_x >= 0 && pix_x <= 120 && pix_y >= 206 && pix_y <= 320) {
 //			*commandUI = 1;
 //			tableNumber = 5;

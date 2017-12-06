@@ -12,9 +12,6 @@
 #include "printFunc.h"
 #include "touch.h"
 #include "init.h"
-#include "pca9685.h"
-
-#define ADC1_DR_Address    ((u32)0x4001244C)
 
 //UI 화면
 #define WAIT_ORDER 0
@@ -48,9 +45,7 @@ int countConfirm = 0;
 int printTableNUM = 0;
 
 uint16_t pos_x, pos_y;
-
 vu16 ADCConvertedValue;
-
 vu16 ADCTEMP;
 
 //Occured When detect Rx of USART2
@@ -126,6 +121,7 @@ void USART2_IRQHandler(void) {
 			if (sizeBLE[tableNUM] == 512) {
 				tb_st[tableNUM][sizeBLE[tableNUM]] = bufBLE;
 				sizeBLE[tableNUM] = 0;
+
 			} else {
 				tb_st[tableNUM][sizeBLE[tableNUM]++] = bufBLE;
 			}
@@ -159,12 +155,15 @@ void TIM2_IRQHandler(void) {
 			LCD_ShowString(38, 290, "[NEW]", WHITE, GREEN);
 		if (new_flag[6])
 			LCD_ShowString(158, 290, "[NEW]", WHITE, GREEN);
-	} else if (commandUI == 2) {
-		sprintf(ADCTEMP, "%d", ADCConvertedValue);
+
+		// commandUI == 2 로 가야함.
+		ADCTEMP = ADCConvertedValue;
 		//적외선 거리 감지센서에 인식이 되면
-		while(ADCTEMP == 0){
-			delay_ms(50);
+		if (ADCTEMP <= 10) {
+			stopTheCar();
 		}
+	} else if (commandUI == 2) {
+
 	} else if (commandUI == 3) {
 		countConfirm++;
 		if (countConfirm == 4) {
@@ -180,7 +179,7 @@ int main() {
 	Tire_Config();
 	GPIO_Configuration();
 	ADC1_Configuration();
-	DMA_Configuration();
+	DMA_Configuration(&ADCConvertedValue);
 	delay_init(72);
 	UsartInit();
 	init_Timer();

@@ -23,6 +23,10 @@ void Tire_Config(void) {
 	GPIO_InitStructure.GPIO_Pin = RIGHT2_TIRE_IN1 | RIGHT2_TIRE_IN2;
 	GPIO_Init(RIGHT2_TIRE_GPIO, &GPIO_InitStructure);
 
+	GPIO_ResetBits(LEFT1_TIRE_GPIO, LEFT1_TIRE_IN2);
+	GPIO_ResetBits(LEFT2_TIRE_GPIO, LEFT2_TIRE_IN2);
+	GPIO_ResetBits(RIGHT1_TIRE_GPIO, RIGHT1_TIRE_IN2);
+	GPIO_ResetBits(RIGHT2_TIRE_GPIO, RIGHT2_TIRE_IN2);
 	stopTheCar();
 }
 
@@ -44,7 +48,8 @@ void setTowardAndTime(int towards, int time) {
 		setTurnRight();
 		delay_ms(time);
 		break;
-	default: stopTheCar();
+	default:
+		stopTheCar();
 	}
 }
 
@@ -56,10 +61,6 @@ void setTowardAndTime(int towards, int time) {
 
 void setForwards(void) {
 	GPIO_Write(GPIOD, GPIO_ReadOutputData(GPIOD) & 0xff55);
-	// GPIO_ResetBits(LEFT1_TIRE_GPIO, LEFT1_TIRE_IN2);
-	// GPIO_ResetBits(LEFT2_TIRE_GPIO, LEFT2_TIRE_IN2);
-	// GPIO_ResetBits(RIGHT1_TIRE_GPIO, RIGHT1_TIRE_IN2);
-	// GPIO_ResetBits(RIGHT2_TIRE_GPIO, RIGHT2_TIRE_IN2);
 	GPIO_Write(GPIOD, GPIO_ReadOutputData(GPIOD) | 0x0055);
 	// GPIO_SetBits(LEFT1_TIRE_GPIO, LEFT1_TIRE_IN1);
 	// GPIO_SetBits(LEFT2_TIRE_GPIO, LEFT2_TIRE_IN1);
