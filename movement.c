@@ -27,6 +27,7 @@ void Tire_Config(void) {
 	GPIO_ResetBits(LEFT2_TIRE_GPIO, LEFT2_TIRE_IN2);
 	GPIO_ResetBits(RIGHT1_TIRE_GPIO, RIGHT1_TIRE_IN2);
 	GPIO_ResetBits(RIGHT2_TIRE_GPIO, RIGHT2_TIRE_IN2);
+
 	stopTheCar();
 }
 

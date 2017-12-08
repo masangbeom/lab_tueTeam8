@@ -43,33 +43,56 @@ void UsartInit(void) {
 }
 
 void init_Timer() {
+	NVIC_InitTypeDef NVIC_InitStructure1;
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure1;
+
 	NVIC_InitTypeDef NVIC_InitStructure;             // for interreupt
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;       // timerbase...
 
-	/* TIM2 Clock Enable */
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 |RCC_APB1Periph_TIM2, ENABLE);
 
 	/* Enable TIM2 Global Interrupt */
-	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
+	NVIC_InitStructure1.NVIC_IRQChannel = TIM2_IRQn;
+	NVIC_InitStructure1.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure1.NVIC_IRQChannelSubPriority = 2;
+	NVIC_InitStructure1.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure1);
+
+	/* TIM2 Initialize *//* ‚âà‚àè¬ø√É‚àè‚Äù ¬°√∑¬±‚Äö = (1/FCLK)*TIM_Prescaler*TIM_Period */
+	TIM_TimeBaseStructure1.TIM_Period = 3600 - 1;
+	TIM_TimeBaseStructure1.TIM_Prescaler = 2000 - 1; // (1/72MHz)*2000*3600 = 100ms
+	TIM_TimeBaseStructure1.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure1.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure1);
+
+	/* TIM2 Enable */
+	TIM_Cmd(TIM2, ENABLE);
+	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+
+	/* TIM4 Clock Enable */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+
+	/* Enable TIM4 Global Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
-	/* TIM2 Initialize */
+	/* TIM4 Initialize */
 	TIM_TimeBaseStructure.TIM_Period = 2000;
 	TIM_TimeBaseStructure.TIM_Prescaler = 35999;
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
 
-	/* TIM2 Enale */
-	TIM_ARRPreloadConfig(TIM2, ENABLE);
-	TIM_Cmd(TIM2, ENABLE);
+	/* TIM4 Enale */
+	TIM_ARRPreloadConfig(TIM4, ENABLE);
+	TIM_Cmd(TIM4, ENABLE);
 
 }
 
-//ADC º≥¡§ : ¡∂µµºæº≠ ∞™ √‚∑¬ Channel 8π¯ ªÁøÎ.
+//ADC ÏÑ§Ï†ï : Ï°∞ÎèÑÏÑºÏÑú Í∞í Ï∂úÎ†• Channel 8Î≤à ÏÇ¨Ïö©.
 void ADC1_Configuration(void) {
 	ADC_InitTypeDef ADC_InitStructure;
 
@@ -85,7 +108,7 @@ void ADC1_Configuration(void) {
 	ADC_Init(ADC1, &ADC_InitStructure);
 
 	/* ADC1 regular channel8 configuration */
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_8, 1, ADC_SampleTime_55Cycles5);
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_9, 1, ADC_SampleTime_55Cycles5);
 
 	/* Enable ADC1 DMA */
 	ADC_DMACmd(ADC1, ENABLE);
@@ -113,20 +136,24 @@ void ADC1_Configuration(void) {
 
 void GPIO_Configuration(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+	GPIO_InitTypeDef GPIO_InitStructure1;
 
-	//PB0 ¿˚ø‹º±∞≈∏Æ∞®¡ˆºæº≠
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOB,ENABLE);
+
+	GPIO_InitStructure1.GPIO_Pin = GPIO_Pin_0;
+	GPIO_InitStructure1.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure1.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStructure1);
+	//PB1 Ï†ÅÏô∏ÏÑ†Í±∞Î¶¨Í∞êÏßÄÏÑºÏÑú
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
-
 }
 
 void DMA_Configuration(vu16 * ADCConvertedValue) {
 	DMA_InitTypeDef DMA_InitStructure;
 	/* Enable DMA1 clock */
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-
 	/* DMA1 channel1 configuration ----------------------------------------------*/
 	DMA_DeInit(DMA1_Channel1);
 	DMA_InitStructure.DMA_PeripheralBaseAddr = ADC1_DR_Address;

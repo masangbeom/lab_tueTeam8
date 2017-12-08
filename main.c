@@ -13,7 +13,15 @@
 #include "touch.h"
 #include "init.h"
 
-//UI »≠∏È
+// PIEZO PB0
+#define DO 13
+#define RE 12
+#define MI 11
+#define PA 10
+#define SOL 9
+#define RA 8
+
+//UI ÌôîÎ©¥
 #define WAIT_ORDER 0
 #define NEW_ORDER 1
 #define DELI_START 2
@@ -30,10 +38,10 @@ char XY_Value[7][50] = { { '\0' }, { '\0' }, { '\0' }, { '\0' }, { '\0' }, {
 //X, Y Location Value
 int valueXY[2];
 
-//∫Ì∑Á≈ıΩ∫ RX∏¶ ≈Î«ÿ πﬁ¥¬ ∞™¿Ã OrderList¿Œ¡ˆ X,Y Location¿Œ¡ˆ
+//Î∏îÎ£®Ìà¨Ïä§ RXÎ•º ÌÜµÌï¥ Î∞õÎäî Í∞íÏù¥ OrderListÏù∏ÏßÄ X,Y LocationÏù∏ÏßÄ
 int isString = 0;
 
-//¡÷πÆ¿Ã ¿÷¥¬¡ˆ æ¯¥¬¡ˆ 1√ ∏∂¥Ÿ ∞ªΩ≈.
+//Ï£ºÎ¨∏Ïù¥ ÏûàÎäîÏßÄ ÏóÜÎäîÏßÄ 1Ï¥àÎßàÎã§ Í∞±Ïã†.
 int new_flag[7];
 
 int bufBLE, tableNUM, XorY;
@@ -47,6 +55,18 @@ int printTableNUM = 0;
 uint16_t pos_x, pos_y;
 vu16 ADCConvertedValue;
 vu16 ADCTEMP;
+
+
+int Piezo_ONOFF = -1;
+int Timer2_Counter = 0;
+int count_2ms = 0;
+uint16_t Prescaler[] = { SOL, 0, SOL, 0, RA, 0, RA, SOL, 0, SOL, 0, MI, MI, 0,
+SOL, 0, SOL, 0, MI, 0,
+MI, 0, RE, RE, RE, 0, SOL, 0, SOL, 0,
+RA, 0, RA, 0, SOL, 0, SOL, 0, MI, 0,
+SOL, 0, MI, 0, RE, 0, MI, 0, DO, DO,
+DO, 0, 0, 0, 0 };
+
 
 //Occured When detect Rx of USART2
 void USART2_IRQHandler(void) {
@@ -116,7 +136,7 @@ void USART2_IRQHandler(void) {
 		}
 		}
 
-		// String Order List ¿Ã∏È
+		// String Order List Ïù¥Î©¥
 		if (isString == 1) {
 			if (sizeBLE[tableNUM] == 512) {
 				tb_st[tableNUM][sizeBLE[tableNUM]] = bufBLE;
@@ -126,7 +146,7 @@ void USART2_IRQHandler(void) {
 				tb_st[tableNUM][sizeBLE[tableNUM]++] = bufBLE;
 			}
 			tb_st[tableNUM][sizeBLE[tableNUM]] = '\0';
-		} // XY ¡¬«•∞™¿Ã∏È
+		} // XY Ï¢åÌëúÍ∞íÏù¥Î©¥
 		else if (isString == 0) {
 			if (sizeBLEXY[tableNUM] == 512) {
 				XY_Value[tableNUM][sizeBLEXY[tableNUM]] = bufBLE;
@@ -140,8 +160,50 @@ void USART2_IRQHandler(void) {
 
 }
 
-//TIM2
+void beep(int prescaler) {
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+	TIM_OCInitTypeDef TIM_OCInitStructure;
+
+	TIM_TimeBaseStructure.TIM_Period = 1700 - 1; // about 588Hz
+	TIM_TimeBaseStructure.TIM_Prescaler = prescaler - 1; // 1MHz
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Down;
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+
+	TIM_ARRPreloadConfig(TIM3, ENABLE);
+	TIM_Cmd(TIM3, ENABLE);
+
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_Pulse = 1500; //50 % duty cycle value;
+	TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+	TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Disable);
+}
+
 void TIM2_IRQHandler(void) {
+	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
+		if (Timer2_Counter == 2)
+			Piezo_ONOFF = 1;
+		Timer2_Counter++;
+
+		if (Timer2_Counter % 2 == 0) {
+			if (Piezo_ONOFF == 1)
+				count_2ms++;
+		}
+
+		if (Piezo_ONOFF == 1) {
+			beep(Prescaler[count_2ms % 55]);
+		} else if (Timer2_Counter == 30) {
+			Piezo_ONOFF = -1;
+			beep(0);
+		}
+		TIM_ClearITPendingBit(TIM2, TIM_IT_Update); // Clear the interrupt flag
+	}
+}
+
+//TIM4
+void TIM4_IRQHandler(void) {
 	if (commandUI == 0) {
 		if (new_flag[1])
 			LCD_ShowString(38, 75, "[NEW]", WHITE, GREEN);
@@ -156,21 +218,19 @@ void TIM2_IRQHandler(void) {
 		if (new_flag[6])
 			LCD_ShowString(158, 290, "[NEW]", WHITE, GREEN);
 
-		// commandUI == 2 ∑Œ ∞°æﬂ«‘.
-		ADCTEMP = ADCConvertedValue;
-		//¿˚ø‹º± ∞≈∏Æ ∞®¡ˆºæº≠ø° ¿ŒΩƒ¿Ã µ«∏È
-		if (ADCTEMP <= 10) {
-			stopTheCar();
-		}
-	} else if (commandUI == 2) {
 
+	} else if (commandUI == 2) {
+		// commandUI == 2 Î°ú Í∞ÄÏïºÌï®.
+				ADCTEMP = ADCConvertedValue;
+				//Ï†ÅÏô∏ÏÑ† Í±∞Î¶¨ Í∞êÏßÄÏÑºÏÑúÏóê Ïù∏ÏãùÏù¥ ÎêòÎ©¥
+				LCD_ShowNum(30, 20, ADCTEMP, 20, BLACK, WHITE);
 	} else if (commandUI == 3) {
 		countConfirm++;
 		if (countConfirm == 4) {
 			commandUI = 0;
 		}
 	}
-	TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+	TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
 	//Clears the TIMx's interrupt pending bits.
 }
 
