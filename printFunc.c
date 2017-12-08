@@ -15,17 +15,20 @@ void makeXY(int tempSize, char* XY_Value, int * valueXY) {
 	char yTemp[512];
 	for (i = 0; i < tempSize; i++) {
 		char buf = XY_Value[i];
+		if (buf == '*') {
+			continue;
+		}
 		if (buf == ':') {
 			flag = 1;
 			continue;
 		}
+
 		if (flag == 0) {
 			xTemp[xTempIndex++] = buf;
-		} else {
+		} else if (flag == 1) {
 			yTemp[yTempIndex++] = buf;
 		}
 	}
-
 	valueXY[0] = atoi(xTemp);
 	valueXY[1] = atoi(yTemp);
 }
@@ -58,43 +61,23 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 			*commandUI = 1;
 			tableNumber = 1;
 			new_flag[tableNumber] = 0;
-//			setForwards();
-//			delay_ms(1000);
-//			stopTheCar();
-
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 0 && pix_y <= 103) {
 			*commandUI = 1;
 			tableNumber = 2;
 			new_flag[tableNumber] = 0;
-
-//			setBackwards();
-//			delay_ms(1000);
-//			stopTheCar();
-//
 		} else if (pix_x >= 0 && pix_x <= 120 && pix_y >= 103 && pix_y <= 206) {
 			*commandUI = 1;
 			tableNumber = 3;
 			new_flag[tableNumber] = 0;
-
-//			setTurnLeft();
-//			delay_ms(1000);
-//			stopTheCar();
-
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 103
 				&& pix_y <= 206) {
 			*commandUI = 1;
 			tableNumber = 4;
 			new_flag[tableNumber] = 0;
-//			setTurnRight();
-//			delay_ms(1000);
-//			stopTheCar();
 		} else if (pix_x >= 0 && pix_x <= 120 && pix_y >= 206 && pix_y <= 320) {
 			*commandUI = 1;
 			tableNumber = 5;
 			new_flag[tableNumber] = 0;
-
-//			stopTheCar();
-
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 206
 				&& pix_y <= 320) {
 			*commandUI = 1;
@@ -107,19 +90,20 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 }
 
 void printOrderList(char * tb_st, int * commandUI, uint16_t *pos_x,
-		uint16_t *pos_y, char * XY_Value, int xySize, int * valueXY) {
+		uint16_t *pos_y, char * XY_Value, int * xySize, int * valueXY) {
 
 	uint16_t pix_x, pix_y;
 
 	TIM_ITConfig(TIM4, TIM_IT_Update, DISABLE); // interrupt enable
 	TIM_ITConfig(TIM2, TIM_IT_Update, DISABLE); // interrupt enable
+	valueXY[0] = -1;
+	valueXY[1] = -1;
 
-	makeXY(xySize, XY_Value, valueXY); // make valueXY[0]-X, valueXY[1]-Y
+	makeXY(*xySize, XY_Value, valueXY); // make valueXY[0]-X, valueXY[1]-Y
 
 	LCD_Clear(WHITE);
 
 	while (*commandUI == 1) {
-
 		LCD_ShowString(10, 30, tb_st, BLACK, WHITE);
 		LCD_DrawLine(100, 240, 100, 320);
 		LCD_ShowString(30, 275, "Back", BLACK, WHITE);
@@ -133,24 +117,54 @@ void printOrderList(char * tb_st, int * commandUI, uint16_t *pos_x,
 			*commandUI = 0;
 		} else if (pix_x > 100 && pix_x <= 240 && pix_y >= 240
 				&& pix_y <= 320) {
+			XY_Value[0] = '\0';
+			*xySize = 0;
 			*commandUI = 2; // Start Delivery
 		}
 	}
 	LCD_Clear(WHITE);
 }
 
-void startDelivery(int * commandUI, uint16_t *pos_x, uint16_t *pos_y) {
+void startDelivery(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
+		int * valueXY, int * stopFlag) {
 	uint16_t pix_x, pix_y;
-	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE); // interrupt enable
+	TIM_ITConfig(TIM5, TIM_IT_Update, ENABLE); // interrupt enable
+	delay_ms(200);
 	while (*commandUI == 2) {
 		LCD_DrawLine(0, 240, 240, 240);
 		LCD_ShowString(30, 123, "FoodVery is delivering !", BLACK, WHITE);
-		LCD_ShowString(30, 275, "Press Button - GO BACK", BLACK, WHITE);
-		Touch_GetXY(pos_x, pos_y, 1);
-		Convert_Pos(*pos_x, *pos_y, &pix_x, &pix_y);
-		if (pix_x >= 0 && pix_x <= 240 && pix_y >= 240 && pix_y <= 320) {
+
+		if (valueXY[1] == 0) {
+			TIM_ITConfig(TIM5, TIM_IT_Update, DISABLE); // interrupt enable
+			stopTheCar();
 			*commandUI = 3;
+			*stopFlag = -1;
+			valueXY[0] = 0;
+			break;
 		}
+
+		if (*stopFlag == 1) {
+			stopTheCar();
+			delay_ms(50);
+		} else {
+			switch (valueXY[0]) {
+			case FORWARDS:
+				setForwards();
+				break;
+			case BACKWARDS:
+				setBackwards();
+				break;
+			case TURNLEFT:
+				setTurnLeft();
+				break;
+			case TURNRIGHT:
+				setTurnRight();
+				break;
+			default:
+				stopTheCar();
+			}
+		}
+
 	}
 	LCD_Clear(WHITE);
 }
@@ -161,11 +175,12 @@ void printConfirm(char * tb_st, int * tbSizeBLE, int *commandUI,
 	LCD_ShowString(30, 153, "Have a nice meal.\n\nThank you for your order.",
 	BLACK, WHITE);
 	while (*commandUI == 3) {
-		if (*countConfirm == 4) {
+		if (*countConfirm == 2) {
 			*countConfirm = 0;
 			*commandUI = 0;
 			tb_st[0] = '\0';
 			*tbSizeBLE = 0;
+
 		}
 	}
 	TIM_ITConfig(TIM4, TIM_IT_Update, DISABLE);

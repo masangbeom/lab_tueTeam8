@@ -28,11 +28,11 @@
 #define CONFIRM 3
 
 //Order List String
-char tb_st[7][512] = { { '\0' }, { '\0' }, { '\0' }, { '\0' }, { '\0' },
+char tb_st[7][999] = { { '\0' }, { '\0' }, { '\0' }, { '\0' }, { '\0' },
 		{ '\0' }, { '\0' } };
 
 //Temp Array for X, Y Location Value
-char XY_Value[7][50] = { { '\0' }, { '\0' }, { '\0' }, { '\0' }, { '\0' }, {
+char XY_Value[7][999] = { { '\0' }, { '\0' }, { '\0' }, { '\0' }, { '\0' }, {
 		'\0' }, { '\0' } };
 
 //X, Y Location Value
@@ -59,7 +59,10 @@ vu16 ADCTEMP;
 int Piezo_ONOFF = -1;
 int Timer2_Counter = 0;
 int count_2ms = 0;
-uint16_t Prescaler[] = { SOL, 0, SOL, 0, RA, 0, RA, SOL, 0, SOL, 0, MI};
+uint16_t Prescaler[] = { SOL, MI, MI, 0, PA, RE, RE, 0, DO, RE, MI, PA, SOL,
+		SOL, SOL, 0, SOL, MI, MI, MI, 0, PA, RE, RE, RE, 0, DO, MI, SOL, MI, DO,
+		DO, DO };
+int stopFlag = -1;
 
 //Occured When detect Rx of USART2
 void USART2_IRQHandler(void) {
@@ -121,7 +124,6 @@ void USART2_IRQHandler(void) {
 			break;
 		}
 		case '*': {
-			bufBLE = ' ';
 			isString = 0;
 			sizeBLEXY[tableNUM] = 0;
 			XY_Value[tableNUM][0] = '\0';
@@ -131,7 +133,7 @@ void USART2_IRQHandler(void) {
 
 		// String Order List 이면
 		if (isString == 1) {
-			if (sizeBLE[tableNUM] == 512) {
+			if (sizeBLE[tableNUM] == 999) {
 				tb_st[tableNUM][sizeBLE[tableNUM]] = bufBLE;
 				sizeBLE[tableNUM] = 0;
 
@@ -141,7 +143,7 @@ void USART2_IRQHandler(void) {
 			tb_st[tableNUM][sizeBLE[tableNUM]] = '\0';
 		} // XY 좌표값이면
 		else if (isString == 0) {
-			if (sizeBLEXY[tableNUM] == 512) {
+			if (sizeBLEXY[tableNUM] == 999) {
 				XY_Value[tableNUM][sizeBLEXY[tableNUM]] = bufBLE;
 				sizeBLEXY[tableNUM] = 0;
 			} else {
@@ -187,9 +189,10 @@ void TIM2_IRQHandler(void) {
 
 		if (Piezo_ONOFF == 1) {
 			beep(Prescaler[count_2ms % 55]);
-		} else if (Timer2_Counter == 30) {
+		} else if (Timer2_Counter == 33) {
 			Piezo_ONOFF = -1;
 			beep(0);
+			TIM_ITConfig(TIM2, TIM_IT_Update, DISABLE); // interrupt enable
 		}
 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update); // Clear the interrupt flag
 	}
@@ -223,18 +226,24 @@ void TIM4_IRQHandler(void) {
 			LCD_ShowString(158, 290, "[NEW]", WHITE, GREEN);
 			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
 		}
-	} else if (commandUI == 2) {
-		// commandUI == 2 로 가야함.
-		ADCTEMP = ADCConvertedValue;
-		//적외선 거리 감지센서에 인식이 되면
-		LCD_ShowNum(30, 20, ADCTEMP, 20, BLACK, WHITE);
 	} else if (commandUI == 3) {
 		countConfirm++;
-		if (countConfirm == 4) {
-			commandUI = 0;
-		}
 	}
 	TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
+	//Clears the TIMx's interrupt pending bits.
+}
+
+void TIM5_IRQHandler(void) {
+	ADCTEMP = ADCConvertedValue;
+	//적외선 거리 감지센서에 인식이 되면
+	if (ADCTEMP <= 10) {
+		stopFlag = 1;
+	} else{
+		valueXY[1]--; // 1 : 100ms
+		stopFlag = -1;
+	}
+
+	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	//Clears the TIMx's interrupt pending bits.
 }
 
@@ -260,12 +269,12 @@ int main() {
 		}
 		case NEW_ORDER: {
 			beep(0);
-			printOrderList(tb_st[printTableNUM], &commandUI, &pos_x, &pos_y, XY_Value[printTableNUM],
-					sizeBLEXY[tableNUM], valueXY);
+			printOrderList(tb_st[printTableNUM], &commandUI, &pos_x, &pos_y,
+					XY_Value[printTableNUM], &sizeBLEXY[printTableNUM], valueXY);
 			break;
 		}
 		case DELI_START: {
-			startDelivery(&commandUI, &pos_x, &pos_y);
+			startDelivery(&commandUI, &pos_x, &pos_y, valueXY, &stopFlag);
 			break;
 		}
 		case CONFIRM: {

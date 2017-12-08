@@ -46,10 +46,13 @@ void init_Timer() {
 	NVIC_InitTypeDef NVIC_InitStructure1;
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure1;
 
+	NVIC_InitTypeDef NVIC_InitStructure2;             // for interreupt
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure2;       // timerbase...
+
 	NVIC_InitTypeDef NVIC_InitStructure;             // for interreupt
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;       // timerbase...
 
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 |RCC_APB1Periph_TIM2, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 | RCC_APB1Periph_TIM2, ENABLE);
 
 	/* Enable TIM2 Global Interrupt */
 	NVIC_InitStructure1.NVIC_IRQChannel = TIM2_IRQn;
@@ -79,7 +82,7 @@ void init_Timer() {
 	NVIC_Init(&NVIC_InitStructure);
 
 	/* TIM4 Initialize */
-	TIM_TimeBaseStructure.TIM_Period = 2000;
+	TIM_TimeBaseStructure.TIM_Period = 1999;
 	TIM_TimeBaseStructure.TIM_Prescaler = 35999;
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -88,6 +91,28 @@ void init_Timer() {
 	/* TIM4 Enale */
 	TIM_ARRPreloadConfig(TIM4, ENABLE);
 	TIM_Cmd(TIM4, ENABLE);
+
+
+	/* TIM5 Clock Enable */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
+
+	/* Enable TIM5 Global Interrupt */
+	NVIC_InitStructure.NVIC_IRQChannel = TIM5_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
+	/* TIM5 Initialize */
+	TIM_TimeBaseStructure.TIM_Period = 199;
+	TIM_TimeBaseStructure.TIM_Prescaler = 35999;
+	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);
+
+	/* TIM5 Enale */
+	TIM_ARRPreloadConfig(TIM5, ENABLE);
+	TIM_Cmd(TIM5, ENABLE);
 
 }
 
@@ -137,7 +162,7 @@ void GPIO_Configuration(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitTypeDef GPIO_InitStructure1;
 
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOB,ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | RCC_APB2Periph_GPIOB, ENABLE);
 
 	GPIO_InitStructure1.GPIO_Pin = GPIO_Pin_0;
 	GPIO_InitStructure1.GPIO_Mode = GPIO_Mode_AF_PP;
