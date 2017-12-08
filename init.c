@@ -67,7 +67,6 @@ void init_Timer() {
 
 	/* TIM2 Enable */
 	TIM_Cmd(TIM2, ENABLE);
-	TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
 
 	/* TIM4 Clock Enable */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);

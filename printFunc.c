@@ -6,6 +6,30 @@
 #include "movement.h"
 #include <stdlib.h>
 
+void makeXY(int tempSize, char* XY_Value, int * valueXY) {
+	int i;
+	int flag = 0;
+	int xTempIndex = 0;
+	int yTempIndex = 0;
+	char xTemp[512];
+	char yTemp[512];
+	for (i = 0; i < tempSize; i++) {
+		char buf = XY_Value[i];
+		if (buf == ':') {
+			flag = 1;
+			continue;
+		}
+		if (flag == 0) {
+			xTemp[xTempIndex++] = buf;
+		} else {
+			yTemp[yTempIndex++] = buf;
+		}
+	}
+
+	valueXY[0] = atoi(xTemp);
+	valueXY[1] = atoi(yTemp);
+}
+
 int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 		int * new_flag) {
 	uint16_t pix_x, pix_y;
@@ -31,45 +55,45 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 		Touch_GetXY(pos_x, pos_y, 1);
 		Convert_Pos(*pos_x, *pos_y, &pix_x, &pix_y);
 		if (pix_x >= 0 && pix_x <= 120 && pix_y >= 0 && pix_y <= 103) {
-//			*commandUI = 1;
-//			tableNumber = 1;
-//			new_flag[tableNumber] = 0;
-			setForwards();
-			delay_ms(1000);
-			stopTheCar();
+			*commandUI = 1;
+			tableNumber = 1;
+			new_flag[tableNumber] = 0;
+//			setForwards();
+//			delay_ms(1000);
+//			stopTheCar();
 
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 0 && pix_y <= 103) {
-//			*commandUI = 1;
-//			tableNumber = 2;
-//			new_flag[tableNumber] = 0;
+			*commandUI = 1;
+			tableNumber = 2;
+			new_flag[tableNumber] = 0;
 
-			setBackwards();
-			delay_ms(1000);
-			stopTheCar();
+//			setBackwards();
+//			delay_ms(1000);
+//			stopTheCar();
 //
 		} else if (pix_x >= 0 && pix_x <= 120 && pix_y >= 103 && pix_y <= 206) {
-//			*commandUI = 1;
-//			tableNumber = 3;
-//			new_flag[tableNumber] = 0;
+			*commandUI = 1;
+			tableNumber = 3;
+			new_flag[tableNumber] = 0;
 
-			setTurnLeft();
-			delay_ms(1000);
-			stopTheCar();
+//			setTurnLeft();
+//			delay_ms(1000);
+//			stopTheCar();
 
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 103
 				&& pix_y <= 206) {
-//			*commandUI = 1;
-//			tableNumber = 4;
-//			new_flag[tableNumber] = 0;
-			setTurnRight();
-			delay_ms(1000);
-			stopTheCar();
+			*commandUI = 1;
+			tableNumber = 4;
+			new_flag[tableNumber] = 0;
+//			setTurnRight();
+//			delay_ms(1000);
+//			stopTheCar();
 		} else if (pix_x >= 0 && pix_x <= 120 && pix_y >= 206 && pix_y <= 320) {
-//			*commandUI = 1;
-//			tableNumber = 5;
-//			new_flag[tableNumber] = 0;
+			*commandUI = 1;
+			tableNumber = 5;
+			new_flag[tableNumber] = 0;
 
-			stopTheCar();
+//			stopTheCar();
 
 		} else if (pix_x >= 120 && pix_x <= 240 && pix_y >= 206
 				&& pix_y <= 320) {
@@ -83,15 +107,25 @@ int printWaitUI(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
 }
 
 void printOrderList(char * tb_st, int * commandUI, uint16_t *pos_x,
-		uint16_t *pos_y) {
+		uint16_t *pos_y, char * XY_Value, int xySize, int * valueXY) {
+
 	uint16_t pix_x, pix_y;
+
 	TIM_ITConfig(TIM4, TIM_IT_Update, DISABLE); // interrupt enable
+	TIM_ITConfig(TIM2, TIM_IT_Update, DISABLE); // interrupt enable
+
+	makeXY(xySize, XY_Value, valueXY); // make valueXY[0]-X, valueXY[1]-Y
+
 	LCD_Clear(WHITE);
+
 	while (*commandUI == 1) {
+
 		LCD_ShowString(10, 30, tb_st, BLACK, WHITE);
 		LCD_DrawLine(100, 240, 100, 320);
 		LCD_ShowString(30, 275, "Back", BLACK, WHITE);
-		LCD_ShowString(120, 275, "Start Delivery", BLACK, WHITE);
+//		LCD_ShowString(120, 275, "Start Delivery", BLACK, WHITE);
+		LCD_ShowNum(120, 275, valueXY[0], 20, BLACK, WHITE);
+		LCD_ShowNum(120, 295, valueXY[1], 20, BLACK, WHITE);
 		LCD_DrawLine(0, 240, 240, 240);
 		Touch_GetXY(pos_x, pos_y, 1);
 		Convert_Pos(*pos_x, *pos_y, &pix_x, &pix_y);
@@ -105,41 +139,13 @@ void printOrderList(char * tb_st, int * commandUI, uint16_t *pos_x,
 	LCD_Clear(WHITE);
 }
 
-void makeXY(int tempSize, char* XY_Value, int * valueXY) {
-	int i;
-	int flag = 0;
-	int xTempIndex = 0;
-	int yTempIndex = 0;
-	char xTemp[512];
-	char yTemp[512];
-	for (i = 0; i < tempSize; i++) {
-		char buf = XY_Value[i];
-		if (buf == ':') {
-			flag = 1;
-			continue;
-		}
-		if (flag == 0) {
-			xTemp[xTempIndex++] = buf;
-		} else {
-			yTemp[yTempIndex++] = buf;
-		}
-	}
-
-	valueXY[0] = atoi(xTemp);
-	valueXY[1] = atoi(yTemp);
-}
-
-void startDelivery(int * commandUI, uint16_t *pos_x, uint16_t *pos_y,
-		char * XY_Value, int tempSize, int * valueXY) {
+void startDelivery(int * commandUI, uint16_t *pos_x, uint16_t *pos_y) {
 	uint16_t pix_x, pix_y;
-	makeXY(tempSize, XY_Value, valueXY);
-	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
+	TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE); // interrupt enable
 	while (*commandUI == 2) {
 		LCD_DrawLine(0, 240, 240, 240);
 		LCD_ShowString(30, 123, "FoodVery is delivering !", BLACK, WHITE);
 		LCD_ShowString(30, 275, "Press Button - GO BACK", BLACK, WHITE);
-		LCD_ShowNum(30, 200, valueXY[0], 20, BLACK, WHITE);
-		LCD_ShowNum(30, 220, valueXY[1], 20, BLACK, WHITE);
 		Touch_GetXY(pos_x, pos_y, 1);
 		Convert_Pos(*pos_x, *pos_y, &pix_x, &pix_y);
 		if (pix_x >= 0 && pix_x <= 240 && pix_y >= 240 && pix_y <= 320) {

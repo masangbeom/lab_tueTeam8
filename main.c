@@ -56,17 +56,10 @@ uint16_t pos_x, pos_y;
 vu16 ADCConvertedValue;
 vu16 ADCTEMP;
 
-
 int Piezo_ONOFF = -1;
 int Timer2_Counter = 0;
 int count_2ms = 0;
-uint16_t Prescaler[] = { SOL, 0, SOL, 0, RA, 0, RA, SOL, 0, SOL, 0, MI, MI, 0,
-SOL, 0, SOL, 0, MI, 0,
-MI, 0, RE, RE, RE, 0, SOL, 0, SOL, 0,
-RA, 0, RA, 0, SOL, 0, SOL, 0, MI, 0,
-SOL, 0, MI, 0, RE, 0, MI, 0, DO, DO,
-DO, 0, 0, 0, 0 };
-
+uint16_t Prescaler[] = { SOL, 0, SOL, 0, RA, 0, RA, SOL, 0, SOL, 0, MI};
 
 //Occured When detect Rx of USART2
 void USART2_IRQHandler(void) {
@@ -205,25 +198,36 @@ void TIM2_IRQHandler(void) {
 //TIM4
 void TIM4_IRQHandler(void) {
 	if (commandUI == 0) {
-		if (new_flag[1])
+		if (new_flag[1]) {
 			LCD_ShowString(38, 75, "[NEW]", WHITE, GREEN);
-		if (new_flag[2])
+			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+		}
+		if (new_flag[2]) {
 			LCD_ShowString(158, 75, "[NEW]", WHITE, GREEN);
-		if (new_flag[3])
+			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+		}
+		if (new_flag[3]) {
 			LCD_ShowString(38, 175, "[NEW]", WHITE, GREEN);
-		if (new_flag[4])
+			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+		}
+		if (new_flag[4]) {
 			LCD_ShowString(158, 175, "[NEW]", WHITE, GREEN);
-		if (new_flag[5])
+			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+		}
+		if (new_flag[5]) {
 			LCD_ShowString(38, 290, "[NEW]", WHITE, GREEN);
-		if (new_flag[6])
+			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+		}
+
+		if (new_flag[6]) {
 			LCD_ShowString(158, 290, "[NEW]", WHITE, GREEN);
-
-
+			TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE); // interrupt enable
+		}
 	} else if (commandUI == 2) {
 		// commandUI == 2 로 가야함.
-				ADCTEMP = ADCConvertedValue;
-				//적외선 거리 감지센서에 인식이 되면
-				LCD_ShowNum(30, 20, ADCTEMP, 20, BLACK, WHITE);
+		ADCTEMP = ADCConvertedValue;
+		//적외선 거리 감지센서에 인식이 되면
+		LCD_ShowNum(30, 20, ADCTEMP, 20, BLACK, WHITE);
 	} else if (commandUI == 3) {
 		countConfirm++;
 		if (countConfirm == 4) {
@@ -255,12 +259,13 @@ int main() {
 			break;
 		}
 		case NEW_ORDER: {
-			printOrderList(tb_st[printTableNUM], &commandUI, &pos_x, &pos_y);
+			beep(0);
+			printOrderList(tb_st[printTableNUM], &commandUI, &pos_x, &pos_y, XY_Value[printTableNUM],
+					sizeBLEXY[tableNUM], valueXY);
 			break;
 		}
 		case DELI_START: {
-			startDelivery(&commandUI, &pos_x, &pos_y, XY_Value[printTableNUM],
-					sizeBLEXY[tableNUM], valueXY);
+			startDelivery(&commandUI, &pos_x, &pos_y);
 			break;
 		}
 		case CONFIRM: {
